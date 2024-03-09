@@ -1,0 +1,80 @@
+P2P 방식 업데이터 , 중앙 집중 로그, 매뉴얼 
+ACME
+Admin (django(python))
+Server (golang)
+Client (flutter)
+mariadb
+logstash
+elk
+redis (session)
+ngrind (test)
+
+인증서발급 -> 추후
+인증 -> 추후
+전처리 실행 
+후처리 실행
+
+checkupdate -> (server)
+{
+	"filename": "test.txt"
+	"version": "1.0"
+	"filehash": "123123123123"
+	"filesize": 123
+	"osname":
+	"osversion":
+}
+
+checkupdate <- (server)
+{
+	"updateneeded": 1
+	"filename" : "test1.exe"
+	"version" : "1.0"
+	"filehash" :"123123123123123"
+	"filesize" : 132
+	"installdir" : "2111123123"
+	"iplist" : [ {using:0, ip:"172.20.24.123"}, {using:1, ip:"172.20.24.124"}]
+} + session
+
+------------------------------------------------------------------------------------
+웹소켓 
+download -> (peer or server)
+{
+	"filehash":  "",
+	"filesize": "",
+} + session
+download <- (peer or server)
+{
+	"error": 0
+	"filehash": "",
+	"filesize", "",
+} + session
+
+begindownload ->
+{
+	"ip": "172.20.24.124",
+} + session
+
+faildownload ->
+{
+	"filehash": "",
+	"filesize": "",
+	"ip": "",
+	"reason": "not exist", "failed to connect", "refused to connect" 
+} + session
+
+enddownload ->
+{
+	"filehash": "",
+	"filesize": "",
+	"ip": ""
+} + session
+
+
+DB
+ip_list : id, IP, USING, FAIL_COUNT
+
+file_lsit : id, version, name, hash, size, downloadeddir, storedpath, fail_count
+
+ip_file : id, ip_id, file_id
+
+

@@ -1,0 +1,13 @@
+$mysql_secure_installation
+Enter current password for root -> enter
+Switch to unix_socket authentication [Y/n] -> n
+Remove anonymous users? [Y/n] -> Y
+Disallow root login remotely? [Y/n] -> Y
+Remote test database and access to it? [Y/n] -> Y
+Reload privilege tables now? -> Y
+
+$mysql -u root -p 
+> create database nexess_udpater
+> create user 'nexess'@'%' identified by 'nexess12#$' 
+> grant all on nexess_update.* to 'nexess'@'%';
+> flush privilege
