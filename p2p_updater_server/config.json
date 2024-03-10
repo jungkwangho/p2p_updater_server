@@ -1,0 +1,13 @@
+{
+    "listen_port":8088,
+    "server_base":"./",
+    "use_tls":false,
+    "cert_path":"./server.crt",
+    "key_path":"./server.key",
+    "db_addr":"127.0.0.1",
+    "db_port":3306,
+    "db_name":"nexess_updater",
+    "db_user":"nexess",
+    "db_pass":"nexess12#$",
+    "log_dir":"logs"
+}

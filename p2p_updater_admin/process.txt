@@ -1,0 +1,37 @@
+$sudo apt install libmysqlclient-dev
+$sudo apt install mysql-client
+
+$pip3 install virtualenvwrapper
+
+export WORKON_HOME=$HOME/.virtualenvs
+export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3
+export VIRTUALENVWRAPPER_VIRTUALENV_ARGS=' -p /usr/bin/python3 '
+export PROJECT_HOME=$HOME/Devel
+source /usr/local/bin/virtualenvwrapper.sh
+
+mkvirtualenv p2p_updater_admin
+[
+    deativate
+    workon 
+    workon <name of environment>
+    rmvirtualenv <name of environment>
+]
+
+$pip3 install mysqlclient
+
+$cd p2p_updater_admin
+$django-admin startprojet p2p_updater_admin
+$manage.py startapp catalog
+
+p2p_updater_admin 에서 settings.py
+INSTALLED_APPS, DATABASES, TIMEZONE 세팅 변경
+
+p2p_updater_admin 에서 urls.py 
+urlpatterns 변경
+
+catalog 에 url.py 추가
+
+./manage.py makemigrations
+./manage.py migrate
+
+./manage.py runserver

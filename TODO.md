@@ -15,6 +15,7 @@
   - 중앙 집중 로그
   - ACME 
   - CDN
+  - 압축
 
 2. 기능 명세
   a. 공통
@@ -27,15 +28,18 @@
   - 업데이트 확인 응답
   - 업데이트 파일 요청 응답
   - 결과 확인
+  - 서버 설정: listen port, 인증서, server_base, 로그 경로, db 계정
   c. 클라이언트 
   - https 클라이언트 기능
   - 업데이트 확인 요청
   - 업데이트 파일 요청
   - 업데이트 파일 실행 기능
   - 결과 보고
+  - 클라이언트 설정: server_addr list, 인증서, client_base, timeout, report option, 로그 경로
+  - 연결 실패, 지연, 중단, 처리
 
 3. 필요 기술
   a. 서버
   - mariadb, golang, gogin
   b. 클라이언트
-  - python
+  - flutter(fluent_ui)
