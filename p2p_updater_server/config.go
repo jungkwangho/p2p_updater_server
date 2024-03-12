@@ -9,6 +9,7 @@ import (
 type Config struct {
 	ListenPort int    `json:"listen_port"`
 	ServerBase string `json:"server_base"`
+	FilesBase  string `json:"files_base"`
 	UseTLS     bool   `json:"use_tls"`
 	CertPath   string `json:"cert_path"`
 	KeyPath    string `json:"key_path"`
@@ -18,6 +19,8 @@ type Config struct {
 	DBUser     string `json:"db_user"`
 	DBPass     string `json:"db_pass"`
 	LogDir     string `json:"log_dir"`
+	LogPrefix  string `json:"log_prefix"`
+	LogSuffix  string `json:"log_suffix"`
 }
 
 func (config *Config) Load(path string) error {

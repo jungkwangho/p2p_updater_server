@@ -27,8 +27,9 @@ func HelloServer(w http.ResponseWriter, req *http.Request) {
 }
 
 type UpdaterHandler struct {
-	db   *sql.DB
-	conf *Config
+	db     *sql.DB
+	conf   *Config
+	logger *RotateLogger
 }
 
 type UpdateCheckRequest struct {
@@ -72,14 +73,14 @@ func (updaterHandler *UpdaterHandler) UpdateCheck(w http.ResponseWriter, req *ht
 	if err != nil {
 		check_res.Result = -2
 		check_res.Msg = "no update exists"
+	} else {
+		check_res.Result = 0
+		check_res.Msg = "update exists"
+		check_res.Type = update_info.Type
+		check_res.Version = update_info.Version
+		check_res.Hash = update_info.Hash
+		check_res.Name = update_info.Name
 	}
-
-	check_res.Result = 0
-	check_res.Msg = "update exists"
-	check_res.Type = update_info.Type
-	check_res.Version = update_info.Version
-	check_res.Hash = update_info.Hash
-	check_res.Name = update_info.Name
 
 	json.NewEncoder(w).Encode(check_res)
 }
@@ -109,12 +110,13 @@ func (updaterHander *UpdaterHandler) Update(w http.ResponseWriter, req *http.Req
 		return
 	}
 
-	server_base := updaterHander.conf.ServerBase
+	files_base := updaterHander.conf.FilesBase
 
-	full_path := filepath.Join(server_base, stored_path)
+	full_path := filepath.Join(files_base, stored_path)
 	_, err = os.Stat(full_path)
 	if err != nil {
 		http.Error(w, "Not Found", 404)
+		// TODO: log filepath
 		return
 	}
 	http.ServeFile(w, req, full_path)
@@ -159,6 +161,15 @@ func (updaterHander *UpdaterHandler) Report(w http.ResponseWriter, req *http.Req
 	http.Error(w, "OK", 200)
 }
 
+/*
+func LogTest(logger *RotateLogger) {
+
+	for {
+		logger.RLog().Println("---------------------")
+	}
+}
+*/
+
 func main() {
 	var conf Config
 	err := conf.Load("./config.json")
@@ -173,11 +184,23 @@ func main() {
 	defer CloseDB(db)
 	CreateTablesIfNotExists(db)
 
-	updaterHandler := &UpdaterHandler{db: db, conf: &conf}
+	var logger RotateLogger
+	logger.Init(&conf)
+	defer logger.Close()
+
+	updaterHandler := &UpdaterHandler{db: db, conf: &conf, logger: &logger}
 	http.HandleFunc("/hello", HelloServer)
 	http.HandleFunc("/updatecheck", updaterHandler.UpdateCheck)
 	http.HandleFunc("/update", updaterHandler.Update)
 	http.HandleFunc("/report", updaterHandler.Report)
+
+	/*
+		go LogTest(&logger)
+		go LogTest(&logger)
+		go LogTest(&logger)
+		go LogTest(&logger)
+		go LogTest(&logger)
+	*/
 
 	port := fmt.Sprintf(":%d", conf.ListenPort)
 	if conf.UseTLS {

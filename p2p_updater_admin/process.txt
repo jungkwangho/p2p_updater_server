@@ -24,14 +24,28 @@ $django-admin startprojet p2p_updater_admin
 $manage.py startapp catalog
 
 p2p_updater_admin 에서 settings.py
-INSTALLED_APPS, DATABASES, TIMEZONE 세팅 변경
+INSTALLED_APPS, DATABASES, 세팅 변경
+LANGUAGE_CODE = 'ko-kr'
+TIME_ZONE = 'Asia/Seoul'
 
 p2p_updater_admin 에서 urls.py 
 urlpatterns 변경
 
 catalog 에 url.py 추가
 
+# model 변경될때 마다
 ./manage.py makemigrations
 ./manage.py migrate
+
+./manage.py runserver
+
+catalog -> models.py 편집하여 model 추가
+
+catalog -> admin.py 편집하여 model 등록
+
+# 관리자 추가
+./manage.py createsuperuser
+nexess_admin
+admin12#$
 
 ./manage.py runserver

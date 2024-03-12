@@ -31,21 +31,26 @@ func OpenDB(db_addr string, db_port int, db_name string, db_user string, db_pass
 }
 
 func CreateTablesIfNotExists(db *sql.DB) {
-	tables := []string{
-		"create table if not exists files (id int not null auto_increment primary key, type char not null, version varchar(32) not null, hash varchar(64) not null unique key, name varchar(64) not null, stored_path varchar(1024), update_id int, enable bool default(true) not null, register_date datetime default(CURRENT_TIMESTAMP) not null, last_modified datetime default(CURRENT_TIMESTAMP) not null);",
-		"create table if not exists reports (id int not null auto_increment primary key, userid varchar(256), ip varchar(64), old_hash varchar(64) not null, new_hash varchar(64) not null, old_name varchar(64) not null, new_name varchar(64) not null, old_version varchar(32) not null, new_version varchar(32) not null, err_code int not null, err_msg varchar(1024), report_date datetime default(CURRENT_TIMESTAMP) not null );",
-	}
 
-	for i := 0; i < len(tables); i++ {
-		db.Exec(tables[i])
-	}
+	return
+
+	/*
+		tables := []string{
+			"create table if not exists files (id int not null auto_increment primary key, type char not null, version varchar(32) not null, hash varchar(64) not null unique key, name varchar(64) not null, stored_path varchar(1024), update_id int, enable bool default(true) not null, register_date datetime default(CURRENT_TIMESTAMP) not null, last_modified datetime default(CURRENT_TIMESTAMP) not null);",
+			"create table if not exists reports (id int not null auto_increment primary key, userid varchar(256), ip varchar(64), old_hash varchar(64) not null, new_hash varchar(64) not null, old_name varchar(64) not null, new_name varchar(64) not null, old_version varchar(32) not null, new_version varchar(32) not null, err_code int not null, err_msg varchar(1024), report_date datetime default(CURRENT_TIMESTAMP) not null );",
+		}
+
+		for i := 0; i < len(tables); i++ {
+			db.Exec(tables[i])
+		}
+	*/
 }
 
 func GetStoredPathByHash(db *sql.DB, hash string) (string, error) {
 
 	var stored_path sql.NullString
 
-	querystr := fmt.Sprintf("select stored_path from files where hash='%s' and enable=true", hash)
+	querystr := fmt.Sprintf("select stored_path from catalog_file where hash='%s' and enable=true", hash)
 	rows, err := db.Query(querystr)
 	if err != nil {
 		return "", err
@@ -65,35 +70,38 @@ func GetStoredPathByHash(db *sql.DB, hash string) (string, error) {
 
 func GetFileInfoById(db *sql.DB, id int64) (*FileInfo, error) {
 	var info FileInfo
-	querystr := fmt.Sprintf("select type, version, hash, name, stored_path, update_id from files where id='%d' and enable=true;", id)
+	querystr := fmt.Sprintf("select type, version, hash, name, stored_path, update_id from catalog_file where id='%d' and enable=true;", id)
 	rows, err := db.Query(querystr)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	for rows.Next() {
+	if rows.Next() {
 		err = rows.Scan(&info.Type, &info.Version, &info.Hash, &info.Name, &info.StoredPath, &info.UpdateId)
 		if err != nil {
 			return nil, err
 		}
-		break
+		fmt.Println(info)
+	} else {
+		fmt.Println("no corresponding file exists 1")
+		return nil, errors.New("no corresponding file exists 1")
 	}
 	return &info, nil
 }
 
 func GetUpdateInfo(db *sql.DB, old_file *FileInfo) (*FileInfo, error) {
-	querystr := fmt.Sprintf("select update_id from files where type='%s' and version='%s' and hash='%s' and name='%s' order by register_date desc limit 1;", old_file.Type, old_file.Version, old_file.Hash, old_file.Name)
+	querystr := fmt.Sprintf("select update_id from catalog_file where type='%s' and version='%s' and hash='%s' and name='%s' order by register_date desc limit 1;", old_file.Type, old_file.Version, old_file.Hash, old_file.Name)
 	rows, err := db.Query(querystr)
 	if err != nil {
-		fmt.Println("1")
+		fmt.Println(err)
 		return nil, err
 	}
 	defer rows.Close()
 
 	var update_info *FileInfo
 	var update_id sql.NullInt64
-	for rows.Next() {
+	if rows.Next() {
 		err = rows.Scan(&update_id)
 		if err != nil {
 			fmt.Println(err)
@@ -101,9 +109,11 @@ func GetUpdateInfo(db *sql.DB, old_file *FileInfo) (*FileInfo, error) {
 		}
 
 		if !update_id.Valid {
-			return nil, errors.New("no update exists.")
+			fmt.Println("no update exists")
+			return nil, errors.New("no update exists")
 		}
 
+		fmt.Println(update_id)
 		for update_id.Valid {
 
 			update_info, err = GetFileInfoById(db, update_id.Int64)
@@ -113,13 +123,15 @@ func GetUpdateInfo(db *sql.DB, old_file *FileInfo) (*FileInfo, error) {
 			update_id = update_info.UpdateId
 		}
 
-		break
+	} else {
+		fmt.Println("no correspoding file exists 2")
+		return nil, errors.New("no correspoding file exists 2")
 	}
 	return update_info, nil
 }
 
 func InsertReport(db *sql.DB, old_info, new_info *MinFileInfo, user_id, ip, err_code, err_msg string) error {
-	querystmt, err := db.Prepare("insert into reports values (0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP);")
+	querystmt, err := db.Prepare("insert into catalog_report values (0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP);")
 	if err != nil {
 		return err
 	}
