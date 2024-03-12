@@ -57,7 +57,7 @@ def user_directory_path(instance, filename):
     
     setattr(instance, 'version', version)
 
-    return os.path.join("./", filename)
+    return os.path.join(CatalogConfig.UPLOAD_BASE, filename)
 
 # 이게 없으면 makemigration 시 오류가 발생한다.
 @deconstructible
