@@ -1,7 +1,7 @@
 import os
 import pefile
 
-def get_windows_file_version_from_buffer(data, filename):
+def get_windows_file_version_from_buffer(data):
     try:
         pe = pefile.PE(data=data)
         string_version_info = {}

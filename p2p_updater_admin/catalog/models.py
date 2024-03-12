@@ -1,7 +1,7 @@
 from django.db import models
 from django.db.models import UniqueConstraint
 from django.db.models.functions import Lower
-from django.db.models.signals import post_delete
+from django.db.models.signals import post_delete, pre_save
 from django.core.files.storage import FileSystemStorage, default_storage
 from django.core.exceptions import ValidationError
 from django.utils.deconstruct import deconstructible
@@ -13,7 +13,7 @@ import hashlib
 from datetime import date
 
 from .utils_os_windows import get_windows_file_version_from_buffer
-from .utils import file_cleanup
+from .utils import delete_file_cleanup, update_file_cleanup
 """
 +---------------+---------------+------+-----+---------+----------------+
 | Field         | Type          | Null | Key | Default | Extra          |
@@ -33,8 +33,6 @@ from .utils import file_cleanup
 
 def user_directory_path(instance, filename):
 
-    base = os.path.join(CatalogConfig.UPLOAD_BASE, str(date.today()))
-    parts = os.path.splitext(filename)
     ctx = hashlib.sha256()
     instance.stored_path.seek(0)
     totalbytes = bytearray()
@@ -53,13 +51,13 @@ def user_directory_path(instance, filename):
     setattr(instance, 'hash', hashvalue)
 
     default_version  = instance.version
-    version = get_windows_file_version_from_buffer(totalbytes, os.path.join(base, hashvalue))
+    version = get_windows_file_version_from_buffer(totalbytes)
     if version == '':
         version = default_version
     
     setattr(instance, 'version', version)
 
-    return os.path.join(base, hashvalue + parts[1])
+    return os.path.join("./", filename)
 
 # 이게 없으면 makemigration 시 오류가 발생한다.
 @deconstructible
@@ -117,7 +115,10 @@ class File(models.Model):
 
 # File 레코드 삭제시 첨부파일 삭제를 위해
 post_delete.connect(
-    file_cleanup, sender=File, dispatch_uid="file.stored_path.file_cleanup"
+    delete_file_cleanup, sender=File, dispatch_uid="file.stored_path.delete_file_cleanup"
+)
+pre_save.connect(
+    update_file_cleanup, sender=File, dispatch_uid="file.stored_path.update_file_cleanup" 
 )
 
 
