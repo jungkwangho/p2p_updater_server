@@ -61,8 +61,9 @@ func GetStoredPathByHash(db *sql.DB, hash string) (string, error) {
 		err = rows.Scan(&stored_path)
 		if err != nil {
 			return "", err
+		} else {
+			break
 		}
-		break
 	}
 
 	return stored_path.String, nil
@@ -91,7 +92,14 @@ func GetFileInfoById(db *sql.DB, id int64) (*FileInfo, error) {
 }
 
 func GetUpdateInfo(db *sql.DB, old_file *FileInfo) (*FileInfo, error) {
-	querystr := fmt.Sprintf("select update_id from catalog_file where type='%s' and version='%s' and hash='%s' and name='%s' order by register_date desc limit 1;", old_file.Type, old_file.Version, old_file.Hash, old_file.Name)
+
+	var querystr = ""
+	if old_file.Hash != "" {
+		querystr = fmt.Sprintf("select update_id from catalog_file where type='%s' and version='%s' and hash='%s' and name='%s' order by register_date desc limit 1;", old_file.Type, old_file.Version, old_file.Hash, old_file.Name)
+	} else {
+		querystr = fmt.Sprintf("select update_id from catalog_file where type='%s' and version='%s' and name='%s' order by register_date desc limit 1;", old_file.Type, old_file.Version, old_file.Name)
+	}
+
 	rows, err := db.Query(querystr)
 	if err != nil {
 		fmt.Println(err)
