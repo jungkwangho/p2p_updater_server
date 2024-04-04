@@ -21,7 +21,7 @@ from .utils import delete_file_cleanup, update_file_cleanup
 | id            | int(11)       | NO   | PRI | NULL    | auto_increment |
 | type          | varchar(1)    | NO   |     | NULL    |                |
 | version       | varchar(32)   | NO   |     | NULL    |                |
-| hash          | varchar(256)  | NO   | UNI | NULL    |                |
+| hash          | varchar(256)  | NO   |     | NULL    |                |
 | name          | varchar(64)   | NO   |     | NULL    |                |
 | stored_path   | varchar(1024) | YES  |     | NULL    |                |
 | update_id     | int(11)       | YES  |     | NULL    |                |
@@ -80,13 +80,14 @@ class File(models.Model):
     # 반드시 FileField 가 가장 상위에 있어야 한다. 그렇지 않으면 user_directory_path 에서 지정한 hash, name 이 반영안됨
 
     fvalidator = FileValidator()
-    stored_path = models.FileField('파일 업로드', max_length=1024, null=True, blank=True, help_text="파일 경로", upload_to=user_directory_path, validators=[fvalidator])
+    stored_path = models.FileField('파일 업로드', max_length=1024, null=True, blank=True, help_text="파일 경로", upload_to=user_directory_path)
+    #stored_path = models.FileField('파일 업로드', max_length=1024, null=True, blank=True, help_text="파일 경로", upload_to=user_directory_path, validators=[fvalidator])
     id = models.AutoField('파일 ID', primary_key=True, blank=True)
     type = models.CharField("파일 타입", max_length=1, choices=FILE_TYPES, help_text="개별 파일, 설치 패키지 중 택1")
     version = models.CharField('파일 버전', max_length=32, default="1.0", help_text="File Version이 명시된 윈도우 실행파일의 경우 자동으로 해당 버전 적용")
-    hash = models.CharField('파일 해쉬', max_length=256, unique=True, blank=True, editable=False, help_text="File sha256 hash in lower case hex string")
+    hash = models.CharField('파일 해쉬', max_length=256, blank=True, editable=False, help_text="File sha256 hash in lower case hex string")
     name = models.CharField('파일 이름', max_length=256, editable=False, help_text="File name")
-    update_id = models.IntegerField('업데이트 파일 ID', null=True, blank=True, help_text="이 파일의 업데이트(신버전)에 해당하는 파일의 파일ID")
+    update_id = models.IntegerField('업데이트할 파일ID', null=True, blank=True, help_text="이 파일로 업데이트할(구버전) 파일의 파일ID")
     enable = models.BooleanField('업데이트 사용 여부', default=True, blank=True, help_text="Enable using this file")
     register_date = models.DateTimeField('등록 일시', auto_now_add=True, blank=True, help_text="First registered datetime")
     last_modified = models.DateTimeField('수정 일시', auto_now_add=True, blank=True, help_text="Last modified datetime")
@@ -113,6 +114,15 @@ class File(models.Model):
     def get_absolute_url(self):
         return reverse('file-detail-view', args=[str(self.id)])
 
+    def save(self, *args, **kwargs):
+        prev_id = self.update_id
+        self.update_id = None
+
+        super(File, self).save(*args, **kwargs)
+        # prev_id 에 해당하는 항목의 update_id 를 self.id로 업데이트 한다
+        File.objects.filter(id=prev_id).update(update_id=self.id)
+
+
 # File 레코드 삭제시 첨부파일 삭제를 위해
 post_delete.connect(
     delete_file_cleanup, sender=File, dispatch_uid="file.stored_path.delete_file_cleanup"
@@ -128,7 +138,7 @@ pre_save.connect(
 +-------------+---------------+------+-----+---------+----------------+
 | id          | int(11)       | NO   | PRI | NULL    | auto_increment |
 | userid      | varchar(256)  | YES  |     | NULL    |                |
-| ip          | varchar(256)  | YES  |     | NULL    |                |
+| ip          | varchar(1024) | YES  |     | NULL    |                |
 | old_hash    | varchar(256)  | NO   |     | NULL    |                |
 | new_hash    | varchar(256)  | NO   |     | NULL    |                |
 | old_name    | varchar(64)   | NO   |     | NULL    |                |
@@ -143,7 +153,7 @@ pre_save.connect(
 class Report(models.Model):
     id = models.AutoField('리포트 ID', primary_key=True, blank=True, help_text="Id of a report")
     userid = models.CharField('사용자 아이디', max_length=256, null=True, blank=True, help_text="UserId of who sends this report")
-    ip = models.CharField('사용자 IP 주소목록', max_length=256, null=True, blank=True, help_text="a list of IP addresses of who sends this report seperated by ';'")
+    ip = models.CharField('사용자 IP 주소목록', max_length=1024, null=True, blank=True, help_text="a list of IP addresses of who sends this report seperated by ';'")
     old_hash = models.CharField('이전 파일 SHA512 해쉬', max_length=256, help_text="sha512 hash in hexstring of the old file")
     new_hash = models.CharField('신규 파일 SHA512 해쉬', max_length=256, help_text="sha512 hash in hexstring of the new file")
     old_name = models.CharField('이전 파일 이름', max_length=64, help_text="the name of the old file")

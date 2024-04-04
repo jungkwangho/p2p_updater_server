@@ -4,7 +4,7 @@ id, type(F,P), version, hash, name, stored_path, enable, register_date, last_mod
 reports
 id, userid, ip, old_hash, new_hash, old_name, new_name, old_version, new_version, err_code, err_msg, report_date 
 
-create table files (id int not null auto_increment primary key, type char not null, version varchar(32) not null, hash varchar(256) not null unique key, name varchar(64) not null, stored_path varchar(1024), update_id int, enable bool default(true) not null, register_date datetime default(CURRENT_TIMESTAMP) not null, last_modified datetime default(CURRENT_TIMESTAMP) not null);
+create table files (id int not null auto_increment primary key, type char not null, version varchar(32) not null, hash varchar(256) not null, name varchar(64) not null, stored_path varchar(1024), update_id int, enable bool default(true) not null, register_date datetime default(CURRENT_TIMESTAMP) not null, last_modified datetime default(CURRENT_TIMESTAMP) not null);
 MariaDB [nexess_updater]> desc files;
 +---------------+---------------+------+-----+---------------------+----------------+
 | Field         | Type          | Null | Key | Default             | Extra          |
@@ -22,7 +22,7 @@ MariaDB [nexess_updater]> desc files;
 +---------------+---------------+------+-----+---------------------+----------------+
 +---------------+---------------+------+-----+---------------------+----------------+
 
-create table reports (id int not null auto_increment primary key, userid varchar(256), ip varchar(256), old_hash varchar(256) not null, new_hash varchar(256) not null, old_name varchar(64) not null, new_name varchar(64) not null, old_version varchar(32) not null, new_version varchar(32) not null, err_code int not null, err_msg varchar(1024), report_date datetime default(CURRENT_TIMESTAMP) not null );
+create table reports (id int not null auto_increment primary key, userid varchar(256), ip varchar(1024), old_hash varchar(256) not null, new_hash varchar(256) not null, old_name varchar(64) not null, new_name varchar(64) not null, old_version varchar(32) not null, new_version varchar(32) not null, err_code int not null, err_msg varchar(1024), report_date datetime default(CURRENT_TIMESTAMP) not null );
 MariaDB [nexess_updater]> desc reports;
 +-------------+---------------+------+-----+---------------------+----------------+
 | Field       | Type          | Null | Key | Default             | Extra          |

@@ -1,5 +1,6 @@
 import os
 from django.core.files.storage import default_storage
+from django.core.exceptions import ValidationError
 from django.db.models import FileField
 
 def update_file_cleanup(sender, instance, *args, **kwargs):
@@ -8,6 +9,7 @@ def update_file_cleanup(sender, instance, *args, **kwargs):
     # 1. 내용이 다르고 파일명이 같거나 
     # 2. 내용이 다르고 파일명도 다른 경우에 대한 고려만 있으면 된다.
     # 두 경우 모두 기존 파일은 지워야 한다.
+
     try:
         old_img = instance.__class__.objects.get(id=instance.id).stored_path.path
     except:
